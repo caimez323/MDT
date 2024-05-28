@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Voice Channels with Users</title>
+  </head>
+  <body>
+    <h1>Voice Channels with Users</h1>
+    <ul id="channelList"></ul>
+    <script>
+      function fetchVoiceChannels() {
+        fetch("/datas")
+          .then((response) => response.json())
+          .then((data) => {
+            const channelList = document.getElementById("channelList");
+            channelList.innerHTML = "";
+            data.forEach((channel) => {
+              const li = document.createElement("li");
+              li.textContent = `Channel: ${channel.name}, Users: ${channel.memberCount}`;
+              channelList.appendChild(li);
+            });
+          })
+          .catch((error) => {
+            console.error("Error fetching voice channels:", error);
+          });
+      }
+
+      // Appeler fetchVoiceChannels toutes les 5 secondes (5000 millisecondes)
+      setInterval(fetchVoiceChannels, 5000);
+
+      // Appeler fetchVoiceChannels immédiatement au chargement de la page
+      fetchVoiceChannels();
+    </script>
+  </body>
+</html>
