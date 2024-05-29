@@ -1,214 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Déplacer Utilisateur et Chat Vocal</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Déplacer Utilisateur et Chat Vocal</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-    h1 {
-      color: #333;
-      margin: 20px 0;
-    }
+      h1 {
+        color: #333;
+        margin: 20px 0;
+      }
 
-    #userSelect {
-      display: block;
-      margin: 20px 0;
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+      #userSelect {
+        display: block;
+        margin: 20px 0;
+        padding: 10px;
+        width: 300px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-    #channelTabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-    }
+      #channelTabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
 
-    .channelTab {
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+      .channelTab {
+        padding: 10px 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
 
-    .channelTab:hover {
-      background-color: #ddd;
-    }
+      .channelTab:hover {
+        background-color: #ddd;
+      }
 
-    .active {
-      background-color: #bbb;
-    }
+      .active {
+        background-color: #bbb;
+      }
 
-    #chat {
-      margin-top: 20px;
-      width: 80%;
-      max-width: 800px;
-    }
+      #chat {
+        margin-top: 20px;
+        width: 80%;
+        max-width: 800px;
+      }
 
-    #messages {
-      border: 1px solid #ccc;
-      height: 300px;
-      overflow-y: scroll;
-      padding: 10px;
-      background-color: #fff;
-      border-radius: 5px;
-    }
+      #messages {
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 5px;
+      }
 
-    #messageInput {
-      width: calc(100% - 22px);
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+      #messageInput {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background-color: #28a745;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin-top: 10px;
-    }
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+      }
 
-    button:hover {
-      background-color: #218838;
-    }
-  </style>
-</head>
-<body>
-  <h1>Déplacer Utilisateur et Chat Vocal</h1>
-  <label for="userSelect">Sélectionnez un utilisateur :</label>
-  <select id="userSelect" name="user" required>
-    <option value="" disabled selected>Choose User</option>
-  </select>
-  
-  <div id="channelTabs"></div>
-  
-  <div id="chat">
-    <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
+      button:hover {
+        background-color: #218838;
+      }
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    let currentRoom = null;
-    let currentUserId = null;
+      #talkieImage {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        // Récupérer les utilisateurs
-        const usersResponse = await fetch('/api/users');
-        const users = await usersResponse.json();
-        const userSelect = document.getElementById('userSelect');
+      #talkieImage:hover {
+        transform: scale(1.1);
+      }
+    </style>
+  </head>
+  <body>
+    <img
+      id="talkieImage"
+      src="https://cdn-icons-png.flaticon.com/512/3814/3814416.png"
+      alt="Talkie-Walkie"
+      width="50"
+    />
+    <h1>Déplacer Utilisateur et Chat Vocal</h1>
+    <label for="userSelect">Sélectionnez un utilisateur :</label>
+    <select id="userSelect" name="user" required>
+      <option value="" disabled selected>Choose User</option>
+    </select>
 
-        users.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user.id;
-          option.textContent = user.username;
-          userSelect.appendChild(option);
-        });
+    <div id="channelTabs"></div>
 
-        userSelect.addEventListener('change', (event) => {
-          currentUserId = event.target.value;
-        });
+    <div id="chat">
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
 
-        // Récupérer les salons vocaux
-        const channelsResponse = await fetch('/api/voice-channels');
-        const channels = await channelsResponse.json();
-        const channelTabs = document.getElementById('channelTabs');
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let currentRoom = null;
+      let currentUserId = null;
 
-        channels.forEach(channel => {
-          const tab = document.createElement('div');
-          tab.className = 'channelTab';
-          tab.textContent = channel.name;
-          tab.dataset.channelId = channel.id;
+      document.getElementById("talkieImage").addEventListener("click", () => {
+        alert("Talkie-Walkie clicked!");
+      });
 
-          tab.addEventListener('click', async () => {
-            if (currentUserId) {
-              await fetch('/api/move-user', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId: currentUserId, channelId: channel.id })
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Récupérer les utilisateurs
+          const usersResponse = await fetch("/api/users");
+          const users = await usersResponse.json();
+          const userSelect = document.getElementById("userSelect");
+
+          users.forEach((user) => {
+            const option = document.createElement("option");
+            option.value = user.id;
+            option.textContent = user.username;
+            userSelect.appendChild(option);
+          });
+
+          userSelect.addEventListener("change", (event) => {
+            currentUserId = event.target.value;
+          });
+
+          // Récupérer les salons vocaux
+          const channelsResponse = await fetch("/api/voice-channels");
+          const channels = await channelsResponse.json();
+          const channelTabs = document.getElementById("channelTabs");
+
+          channels.forEach((channel) => {
+            const tab = document.createElement("div");
+            tab.className = "channelTab";
+            tab.textContent = channel.name;
+            tab.dataset.channelId = channel.id;
+
+            tab.addEventListener("click", async () => {
+              if (currentUserId) {
+                try {
+                  const response = await fetch("/api/move-user", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      userId: currentUserId,
+                      channelId: channel.id,
+                    }),
+                  });
+
+                  if (response.ok) {
+                    alert("Utilisateur déplacé avec succès");
+                  } else {
+                    console.error(
+                      "Erreur lors du déplacement de l'utilisateur",
+                    );
+                  }
+                } catch (error) {
+                  console.error("Erreur:", error);
+                }
+              }
+
+              if (currentRoom) {
+                socket.emit("leaveRoom", currentRoom);
+              }
+
+              currentRoom = channel.name;
+              socket.emit("joinRoom", currentRoom);
+
+              document.querySelectorAll(".channelTab").forEach((tab) => {
+                tab.classList.remove("active");
               });
+              tab.classList.add("active");
 
-              console.log('Utilisateur déplacé avec succès');
-            }
+              const messages = document.getElementById("messages");
+              messages.innerHTML = ""; // Nettoyer les messages
 
-            if (currentRoom) {
-              socket.emit('leaveRoom', currentRoom);
-            }
-
-            currentRoom = channel.name;
-            socket.emit('joinRoom', currentRoom);
-
-            document.querySelectorAll('.channelTab').forEach(tab => {
-              tab.classList.remove('active');
+              socket.emit("joinRoom", currentRoom);
             });
-            tab.classList.add('active');
 
-            const messages = document.getElementById('messages');
-            messages.innerHTML = ''; // Nettoyer les messages
-
-            socket.emit('joinRoom', currentRoom);
+            channelTabs.appendChild(tab);
           });
 
-          channelTabs.appendChild(tab);
-        });
+          socket.on("loadMessages", (messages) => {
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML = ""; // Nettoyer les messages
+            messages.forEach((message) => {
+              const messageElement = document.createElement("div");
+              messageElement.textContent = message;
+              messagesDiv.appendChild(messageElement);
+            });
+          });
 
-        socket.on('loadMessages', (messages) => {
-          const messagesDiv = document.getElementById('messages');
-          messagesDiv.innerHTML = ''; // Nettoyer les messages
-          messages.forEach(message => {
-            const messageElement = document.createElement('div');
+          // Gestion des messages du chat
+          socket.on("message", (message) => {
+            const messages = document.getElementById("messages");
+            const messageElement = document.createElement("div");
             messageElement.textContent = message;
-            messagesDiv.appendChild(messageElement);
+            messages.appendChild(messageElement);
+            messages.scrollTop = messages.scrollHeight; // Scroll to bottom
           });
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      });
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
         });
 
-        // Gestion des messages du chat
-        socket.on('message', (message) => {
-          const messages = document.getElementById('messages');
-          const messageElement = document.createElement('div');
-          messageElement.textContent = message;
-          messages.appendChild(messageElement);
-          messages.scrollTop = messages.scrollHeight; // Scroll to bottom
-        });
-      } catch (error) {
-        console.error('Error:', error);
+      function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value;
+        if (message && currentRoom) {
+          socket.emit("message", { room: currentRoom, message });
+          messageInput.value = "";
+        }
       }
-    });
-
-    function sendMessage() {
-      const messageInput = document.getElementById('messageInput');
-      const message = messageInput.value;
-      if (message && currentRoom) {
-        socket.emit('message', { room: currentRoom, message });
-        messageInput.value = '';
-      }
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
