@@ -1,34 +1,37 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Voice Channels with Users</title>
-  </head>
-  <body>
-    <h1>Voice Channels with Users</h1>
-    <ul id="channelList"></ul>
-    <script>
-      function fetchVoiceChannels() {
-        fetch("/datas")
-          .then((response) => response.json())
-          .then((data) => {
-            const channelList = document.getElementById("channelList");
-            channelList.innerHTML = "";
-            data.forEach((channel) => {
-              const li = document.createElement("li");
-              li.textContent = `Channel: ${channel.name}, Users: ${channel.memberCount}`;
-              channelList.appendChild(li);
-            });
-          })
-          .catch((error) => {
-            console.error("Error fetching voice channels:", error);
-          });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salons Vocaux</title>
+</head>
+<body>
+  <h1>Salons Vocaux avec Utilisateurs Connectés</h1>
+  <button onclick="refreshData()">Rafraîchir</button>
+  <ul id="voiceChannelsList"></ul>
+
+  <script>
+    // Fonction pour rafraîchir les données des canaux vocaux
+    async function refreshData() {
+      try {
+        const response = await fetch('/api/voice-channels');
+        const data = await response.json();
+
+        const list = document.getElementById('voiceChannelsList');
+        list.innerHTML = ''; // Vider la liste actuelle
+
+        data.forEach(channel => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${channel.name} (Utilisateurs: ${channel.memberCount})`;
+          list.appendChild(listItem);
+        });
+      } catch (error) {
+        console.error('Error fetching voice channels:', error);
       }
+    }
 
-      // Appeler fetchVoiceChannels toutes les 5 secondes (5000 millisecondes)
-      setInterval(fetchVoiceChannels, 5000);
-
-      // Appeler fetchVoiceChannels immédiatement au chargement de la page
-      fetchVoiceChannels();
-    </script>
-  </body>
+    // Appeler refreshData lorsque la page est chargée
+    document.addEventListener('DOMContentLoaded', refreshData);
+  </script>
+</body>
 </html>

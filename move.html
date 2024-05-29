@@ -1,151 +1,75 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Voice Channels</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Déplacer Utilisateur</title>
 </head>
-
 <body>
-    <h1>Voice Channels</h1>
+  <h1>Déplacer Utilisateur vers un Salon Vocal</h1>
+  <form id="moveForm">
+    <label for="channelSelect">Sélectionnez un salon vocal :</label>
+    <select id="channelSelect" name="channel" required></select>
+    <br>
+    <label for="userSelect">Sélectionnez un utilisateur :</label>
+    <select id="userSelect" name="user" required></select>
+    <br>
+    <button type="submit">Déplacer</button>
+  </form>
 
-    <!-- Tabs -->
-    <ul class="tab">
-        <li class="tablinks" onclick="openChannelTab('All', this)" id="defaultOpen">All Channels</li>
-        <li class="tablinks" onclick="openChannelTab('Empty', this)">Empty Channels</li>
-        <li class="tablinks" onclick="openChannelTab('Full', this)">Full Channels</li>
-    </ul>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        // Récupérer les salons vocaux
+        const channelsResponse = await fetch('/api/voice-channels');
+        const channels = await channelsResponse.json();
+        const channelSelect = document.getElementById('channelSelect');
 
-    <!-- Tab Content -->
-    <div id="All" class="tabcontent">
-        <h2>All Channels</h2>
-        <ul id="channelsList">
-        </ul>
-    </div>
-    <div id="Empty" class="tabcontent">
-        <h2>Empty Channels</h2>
-        <ul id="emptyChannelsList">
-        </ul>
-    </div>
-    <div id="Full" class="tabcontent">
-        <h2>Full Channels</h2>
-        <ul id="fullChannelsList">
-        </ul>
-    </div>
-    <div class="buttons">
-        <button id="refreshBtn" onclick="fetchChannelData()">Refresh</button>
-        <button id="moveBtn" onclick="moveUserToVoiceChannel(this)">Move</button>
-    </div>
-    <div class="modal">
-        <div id="modal-content" class="modal-content">
-            <button type="button" class="close-button" aria-label="Close" onclick="closeModal()"></button>
-        </div>
-    </div>
-    <input type="text" id="userIdInput" placeholder="User ID">
+        channels.forEach(channel => {
+          const option = document.createElement('option');
+          option.value = channel.id;
+          option.textContent = channel.name;
+          channelSelect.appendChild(option);
+        });
 
-    <script>
-        // Fetch voice channel data on load and every 5 seconds
-        window.onload = fetchChannelData;
-        setInterval(fetchChannelData, 5000);
+        // Récupérer les utilisateurs
+        const usersResponse = await fetch('/api/users');
+        const users = await usersResponse.json();
+        const userSelect = document.getElementById('userSelect');
 
-        function fetchChannelData() {
-            fetch('/datas')
-                .then(response => response.json())
-                .then(data => {
-                    const allChannelsList = document.getElementById('channelsList');
-                    const emptyChannelsList = document.getElementById('emptyChannelsList');
-                    const fullChannelsList = document.getElementById('fullChannelsList');
-                    allChannelsList.innerHTML = '';
-                    emptyChannelsList.innerHTML = '';
-                    fullChannelsList.innerHTML = '';
+        users.forEach(user => {
+          const option = document.createElement('option');
+          option.value = user.id;
+          option.textContent = user.username;
+          userSelect.appendChild(option);
+        });
 
-                    // Create elements for each voice channel and append to appropriate list based on channel type
-                    for (let channel of data) {
-                        let channelListItem = document.createElement('li');
-                        let channelName = channel.name;
+        // Gestion du formulaire de déplacement
+        document.getElementById('moveForm').addEventListener('submit', async (event) => {
+          event.preventDefault();
 
-                        if (channel.size > 0) {
-                            channelListItem.append(`${channelName} (${channel.size})`);
-                            fullChannelsList.append(channelListItem);
-                            channelListItem.addEventListener('click', showUserInfo.bind(null, channel.id, channelName, channel.size));
-                        } else {
-                            channelListItem.append(`${channelName}`);
-                            emptyChannelsList.append(channelListItem);
-                            channelListItem.addEventListener('click', showUserInfo.bind(null, channel.id, channelName, channel.size));
-                        }
-                        allChannelsList.append(channelListItem);
-                    }
-                })
-                .catch(error => console.log('Error fetching channel data:', error));
-        }
-        // Create modal for displaying users in the selected voice channel
-        function showUserInfo(channelId, channelName, size) {
-            // Fetch users in the selected voice channel
-            fetch('/datas/user/' + channelId)
-                .then(response => response.json())
-                .then(users => {
-                    let modalContent = document.getElementById('modal-content');
-                    modalContent.innerHTML = `<h3>${channelName} (${size})</h3><ul>`;
+          const channelId = channelSelect.value;
+          const userId = userSelect.value;
 
-                    // Add user display names to the modal content, separated by commas
-                    for (let user of users) {
-                        modalContent.innerHTML += `<li>${user}</li>`;
-                    }
+          const response = await fetch('/api/move-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ channelId, userId })
+          });
 
-                    modalContent.innerHTML += '</ul>';
+          if (response.ok) {
+            console.log('Utilisateur déplacé avec succès');
+          } else {
+            console.log('Erreur lors du déplacement de l\'utilisateur');
+          }
+        });
 
-                })
-                .catch(error => console.log('Error fetching user data:', error));
-
-            // Open the modal
-            openModal();
-        }
-
-        function openModal() {
-            document.querySelector('.modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.querySelector('.modal').style.display = 'none';
-        }
-        // Function to open a tab based on button clicked
-        function openChannelTab(channelType, element) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-
-            // Find tablinks
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            // Show tabcontent based on which button was pressed
-            document.getElementById(channelType).style.display = "block";
-            // Add "active" class to current button
-            element.className += " active";
-        }
-
-        // Function to move a user from the selected channel to the target channel
-        function moveUserToVoiceChannel(element) {
-            selectedChannelId = element.parentElement.parentElement.previousElementSibling.id;
-
-            const userIdInput = document.getElementById("userIdInput");
-
-            const userId = userIdInput.value;
-
-            // Send request to move user
-            fetch(`/move/${selectedChannelId}/${userId}`, { method: 'POST' })
-                .then(() => fetchChannelData());
-
-        }
-
-    </script>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script defer src="/move.js"></script>
-
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+  </script>
 </body>
-
 </html>

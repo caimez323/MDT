@@ -10,6 +10,8 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+require("dotenv").config();
+app.use(express.json());
 
 const client = new Client({
   intents: [
@@ -66,22 +68,98 @@ app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
+app.get("/discoTab", (req, res) => {
+  res.sendFile(path.join(__dirname, "discoTab.html"));
+});
 
-app.get("/datas", async (req, res) => {
-  const guildId = process.env.SERVER_ID;
-  const guild = await client.guilds.fetch(guildId);
+app.get("/api/serverDatas", async (req, res) => {
+  res.json(process.env.SERVER_ID);
+});
 
-  const channels = await guild.channels.fetch();
+app.get("/api/userTrack", async (req, res) => {
+  const userTrackDict = {
+    1: "a",
+    2: "b",
+    3: "c",
+    4: "d",
+  };
+  res.json(userTrackDict);
+});
 
-  const voiceChannels = channels
-    .filter((channel) => channel.type === 2 && channel.members.size)
-    .map((channel) => ({
-      id: channel.id,
-      name: channel.name,
-      size: channel.members.size,
+app.get("/api/discoTab", async (req, res) => {
+  const tabDisco = {
+    1: "a",
+    2: "b",
+    3: "c",
+    4: "d",
+  };
+  res.json(tabDisco);
+});
+
+// Route pour fournir les données des canaux vocaux
+app.get("/api/voice-channels", async (req, res) => {
+  try {
+    const guildId = process.env.SERVER_ID;
+    const guild = await client.guilds.fetch(guildId);
+
+    const voiceChannels = guild.channels.cache
+      .filter((channel) => channel.type === 2)
+      .map((channel) => ({
+        id: channel.id,
+        name: channel.name,
+        memberCount: channel.members.size,
+      }));
+
+    res.json(voiceChannels);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Route pour servir la page HTML
+app.get("/data", (req, res) => {
+  res.sendFile(path.join(__dirname, "data.html"));
+});
+
+app.get("/api/users", async (req, res) => {
+  try {
+    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    const guild = await client.guilds.fetch(guildId);
+
+    const members = await guild.members.fetch();
+
+    const users = members.map((member) => ({
+      id: member.user.id,
+      username: member.user.username,
     }));
 
-  res.json(voiceChannels);
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/api/move-user", async (req, res) => {
+  const { userId, channelId } = req.body;
+
+  try {
+    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    const guild = await client.guilds.fetch(guildId);
+
+    const member = await guild.members.fetch(userId);
+    await member.voice.setChannel(channelId);
+
+    res.send("Utilisateur déplacé avec succès");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erreur lors du déplacement de l'utilisateur");
+  }
+});
+
+app.get("/move", (req, res) => {
+  res.sendFile(path.join(__dirname, "move.html"));
 });
 
 // Démarrage du serveur HTTP
