@@ -68,9 +68,6 @@ app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
-app.get("/discoTab", (req, res) => {
-  res.sendFile(path.join(__dirname, "discoTab.html"));
-});
 
 app.get("/api/serverDatas", async (req, res) => {
   res.json(process.env.SERVER_ID);
