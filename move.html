@@ -86,7 +86,6 @@
           tab.dataset.channelId = channel.id;
 
           tab.addEventListener('click', async () => {
-            // Déplacer l'utilisateur
             if (currentUserId) {
               await fetch('/api/move-user', {
                 method: 'POST',
@@ -99,20 +98,35 @@
               alert('Utilisateur déplacé avec succès');
             }
 
-            // Changer de salle de chat
             if (currentRoom) {
               socket.emit('leaveRoom', currentRoom);
             }
-            currentRoom = channel.id;
+
+            currentRoom = channel.name;
             socket.emit('joinRoom', currentRoom);
 
             document.querySelectorAll('.channelTab').forEach(tab => {
               tab.classList.remove('active');
             });
             tab.classList.add('active');
+
+            const messages = document.getElementById('messages');
+            messages.innerHTML = ''; // Nettoyer les messages
+
+            socket.emit('joinRoom', currentRoom);
           });
 
           channelTabs.appendChild(tab);
+        });
+
+        socket.on('loadMessages', (messages) => {
+          const messagesDiv = document.getElementById('messages');
+          messagesDiv.innerHTML = ''; // Nettoyer les messages
+          messages.forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+          });
         });
 
         // Gestion des messages du chat
@@ -121,6 +135,7 @@
           const messageElement = document.createElement('div');
           messageElement.textContent = message;
           messages.appendChild(messageElement);
+          messages.scrollTop = messages.scrollHeight; // Scroll to bottom
         });
       } catch (error) {
         console.error('Error:', error);
@@ -130,8 +145,7 @@
     function sendMessage() {
       const messageInput = document.getElementById('messageInput');
       const message = messageInput.value;
-
-      if (currentRoom && message) {
+      if (message && currentRoom) {
         socket.emit('message', { room: currentRoom, message });
         messageInput.value = '';
       }

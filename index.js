@@ -14,6 +14,8 @@ require("dotenv").config();
 app.use(express.json());
 //app.use(express.static(path.join(__dirname, 'public')));
 
+const messageHistory = {};
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -42,17 +44,21 @@ io.on("connection", (socket) => {
 
   // Écoute des messages venant du client Socket.IO
   socket.on("message", (msg) => {
-    console.log("message from client: " + msg);
+    //console.log("message from client: " + msg);
 
     // Exemple d'envoi d'un message à un canal Discord
-    // On catch le socket emit
+    // On catch le socket emit dans le debug
     const channel = client.channels.cache.get("1245008440145739880");
     if (channel) {
-      channel.send(`Message from client: ${msg}`);
+      // Sur le papier, les messages sont envoyés dans les salons vocaux 
+      // Les canaux sont nommés d'après les cannals vocaux
+      // Ensuite les messages sont stockés sur le serveur socket js et la copie également
+      // En revanche, la copie des message qui est envoyé en texte va venir chercher un salon textuel correspondant, 
+      channel.send(`Message in ${msg.room} : ${msg.message}`);
     }
 
     // Réponse au client Socket.IO
-    socket.emit("message", "Back from server");
+    //socket.emit("message");
   });
 
   socket.on("disconnect", () => {
@@ -94,23 +100,24 @@ app.get("/api/discoTab", async (req, res) => {
 });
 
 // Route pour fournir les données des canaux vocaux
-app.get("/api/voice-channels", async (req, res) => {
+app.get('/api/voice-channels', async (req, res) => {
   try {
-    const guildId = process.env.SERVER_ID;
+    const guildId = process.env.SERVER_ID; 
     const guild = await client.guilds.fetch(guildId);
+    await guild.channels.fetch(); 
 
     const voiceChannels = guild.channels.cache
-      .filter((channel) => channel.type === 2)
-      .map((channel) => ({
+      .filter(channel => channel.type === 2)
+      .map(channel => ({
         id: channel.id,
         name: channel.name,
-        memberCount: channel.members.size,
+        memberCount: channel.members.size 
       }));
 
     res.json(voiceChannels);
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -119,14 +126,13 @@ app.get("/data", (req, res) => {
   res.sendFile(path.join(__dirname, "data.html"));
 });
 
-app.get("/api/users", async (req, res) => {
+app.get('/api/users', async (req, res) => {
   try {
-    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    const guildId = process.env.SERVER_ID;
     const guild = await client.guilds.fetch(guildId);
-
     const members = await guild.members.fetch();
 
-    const users = members.map((member) => ({
+    const users = members.map(member => ({
       id: member.user.id,
       username: member.user.username,
     }));
@@ -134,15 +140,16 @@ app.get("/api/users", async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send('Internal Server Error');
   }
 });
+
 
 app.post("/api/move-user", async (req, res) => {
   const { userId, channelId } = req.body;
 
   try {
-    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    const guildId = process.env.SERVER_ID;
     const guild = await client.guilds.fetch(guildId);
 
     const member = await guild.members.fetch(userId);
@@ -165,20 +172,42 @@ server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// Gestion des connexions socket.io
-io.on("connection", (socket) => {
-  console.log("a user connected");
 
-  socket.on("joinRoom", (room) => {
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('joinRoom', (room) => {
     socket.join(room);
     console.log(`User joined room: ${room}`);
+    if (messageHistory[room]) {
+      socket.emit('loadMessages', messageHistory[room]);
+    }
   });
 
-  socket.on("message", (data) => {
-    io.to(data.room).emit("message", data.message);
+  socket.on('message', async (data) => {
+    const { room, message } = data;
+    if (!messageHistory[room]) {
+      messageHistory[room] = [];
+    }
+    messageHistory[room].push(message);
+
+    io.to(room).emit('message', message);
+
+    // Envoyer une copie du message dans le canal textuel Discord correspondant
+    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    const guild = await client.guilds.fetch(guildId);
+    const textChannel = guild.channels.cache.find(c => c.name === room && c.type === 0); // 0 pour les canaux textuels
+    if (textChannel) {
+      textChannel.send(message);
+    }
   });
 
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
+  socket.on('leaveRoom', (room) => {
+    socket.leave(room);
+    console.log(`User left room: ${room}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
   });
 });
