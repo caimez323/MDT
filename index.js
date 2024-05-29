@@ -12,6 +12,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 require("dotenv").config();
 app.use(express.json());
+//app.use(express.static(path.join(__dirname, 'public')));
 
 const client = new Client({
   intents: [
@@ -67,7 +68,6 @@ app.get("/", (req, res) => {
 app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
-
 
 app.get("/api/serverDatas", async (req, res) => {
   res.json(process.env.SERVER_ID);
@@ -163,4 +163,22 @@ app.get("/move", (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+// Gestion des connexions socket.io
+io.on("connection", (socket) => {
+  console.log("a user connected");
+
+  socket.on("joinRoom", (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
+  });
+
+  socket.on("message", (data) => {
+    io.to(data.room).emit("message", data.message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 });

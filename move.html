@@ -3,35 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Déplacer Utilisateur</title>
+  <title>Déplacer Utilisateur et Chat Vocal</title>
+  <style>
+    #userSelect {
+      display: block;
+      margin: 20px 0;
+    }
+    #channelTabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .channelTab {
+      padding: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .active {
+      background-color: #ddd;
+    }
+    #chat {
+      margin-top: 20px;
+    }
+    #messages {
+      border: 1px solid #ccc;
+      height: 300px;
+      overflow-y: scroll;
+      padding: 10px;
+    }
+    #messageInput {
+      width: calc(100% - 22px);
+      padding: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Déplacer Utilisateur vers un Salon Vocal</h1>
-  <form id="moveForm">
-    <label for="channelSelect">Sélectionnez un salon vocal :</label>
-    <select id="channelSelect" name="channel" required></select>
-    <br>
-    <label for="userSelect">Sélectionnez un utilisateur :</label>
-    <select id="userSelect" name="user" required></select>
-    <br>
-    <button type="submit">Déplacer</button>
-  </form>
+  <h1>Déplacer Utilisateur et Chat Vocal</h1>
+  <label for="userSelect">Sélectionnez un utilisateur :</label>
+  <select id="userSelect" name="user" required></select>
+  
+  <div id="channelTabs"></div>
+  
+  <div id="chat">
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
+    const socket = io();
+    let currentRoom = null;
+    let currentUserId = null;
+
     document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // Récupérer les salons vocaux
-        const channelsResponse = await fetch('/api/voice-channels');
-        const channels = await channelsResponse.json();
-        const channelSelect = document.getElementById('channelSelect');
-
-        channels.forEach(channel => {
-          const option = document.createElement('option');
-          option.value = channel.id;
-          option.textContent = channel.name;
-          channelSelect.appendChild(option);
-        });
-
         // Récupérer les utilisateurs
         const usersResponse = await fetch('/api/users');
         const users = await usersResponse.json();
@@ -44,32 +70,72 @@
           userSelect.appendChild(option);
         });
 
-        // Gestion du formulaire de déplacement
-        document.getElementById('moveForm').addEventListener('submit', async (event) => {
-          event.preventDefault();
-
-          const channelId = channelSelect.value;
-          const userId = userSelect.value;
-
-          const response = await fetch('/api/move-user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ channelId, userId })
-          });
-
-          if (response.ok) {
-            console.log('Utilisateur déplacé avec succès');
-          } else {
-            console.log('Erreur lors du déplacement de l\'utilisateur');
-          }
+        userSelect.addEventListener('change', (event) => {
+          currentUserId = event.target.value;
         });
 
+        // Récupérer les salons vocaux
+        const channelsResponse = await fetch('/api/voice-channels');
+        const channels = await channelsResponse.json();
+        const channelTabs = document.getElementById('channelTabs');
+
+        channels.forEach(channel => {
+          const tab = document.createElement('div');
+          tab.className = 'channelTab';
+          tab.textContent = channel.name;
+          tab.dataset.channelId = channel.id;
+
+          tab.addEventListener('click', async () => {
+            // Déplacer l'utilisateur
+            if (currentUserId) {
+              await fetch('/api/move-user', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: currentUserId, channelId: channel.id })
+              });
+
+              alert('Utilisateur déplacé avec succès');
+            }
+
+            // Changer de salle de chat
+            if (currentRoom) {
+              socket.emit('leaveRoom', currentRoom);
+            }
+            currentRoom = channel.id;
+            socket.emit('joinRoom', currentRoom);
+
+            document.querySelectorAll('.channelTab').forEach(tab => {
+              tab.classList.remove('active');
+            });
+            tab.classList.add('active');
+          });
+
+          channelTabs.appendChild(tab);
+        });
+
+        // Gestion des messages du chat
+        socket.on('message', (message) => {
+          const messages = document.getElementById('messages');
+          const messageElement = document.createElement('div');
+          messageElement.textContent = message;
+          messages.appendChild(messageElement);
+        });
       } catch (error) {
         console.error('Error:', error);
       }
     });
+
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value;
+
+      if (currentRoom && message) {
+        socket.emit('message', { room: currentRoom, message });
+        messageInput.value = '';
+      }
+    }
   </script>
 </body>
 </html>
