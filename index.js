@@ -136,7 +136,7 @@ app.get('/api/users', async (req, res) => {
       id: member.user.id,
       username: member.user.username,
     }));
-
+    
     res.json(users);
   } catch (error) {
     console.error(error);
