@@ -182,6 +182,7 @@ io.on("connection", (socket) => {
 
   socket.on("joinRoom", (room, userId) => {
     const user = userPermissions[userId] || { rooms: ["1"], isAdmin: false };
+    console.log(user)
     if (user.rooms.includes(room) || user.isAdmin) {
       socket.join(room);
       socket.emit("loadMessages", messagesByRoom[room] || []);

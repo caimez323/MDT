@@ -1,276 +1,314 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Déplacer Utilisateur et Chat Vocal</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Déplacer Utilisateur et Chat Vocal</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-    h1 {
-      color: #333;
-      margin: 20px 0;
-    }
+      h1 {
+        color: #333;
+        margin: 20px 0;
+      }
 
-    #userSelect {
-      display: block;
-      margin: 20px 0;
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+      #userSelect {
+        display: block;
+        margin: 20px 0;
+        padding: 10px;
+        width: 300px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-    #channelTabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-      display: none; /* Hidden initially */
-    }
+      #channelTabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+        display: none; /* Hidden initially */
+      }
 
-    .channelTab {
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+      .channelTab {
+        padding: 10px 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
 
-    .channelTab:hover {
-      background-color: #ddd;
-    }
+      .channelTab:hover {
+        background-color: #ddd;
+      }
 
-    .active {
-      background-color: #bbb;
-    }
+      .active {
+        background-color: #007bff;
+        color: white;
+      }
 
-    #chat {
-      margin-top: 20px;
-      width: 80%;
-      max-width: 800px;
-      display: none; /* Hidden initially */
-    }
+      #chat {
+        margin-top: 20px;
+        width: 80%;
+        max-width: 800px;
+        display: none; /* Hidden initially */
+      }
 
-    #messages {
-      border: 1px solid #ccc;
-      height: 300px;
-      overflow-y: scroll;
-      padding: 10px;
-      background-color: #fff;
-      border-radius: 5px;
-    }
+      #messages {
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 5px;
+      }
 
-    #messageInput {
-      width: calc(100% - 22px);
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+      #messageInput {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background-color: #28a745;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin-top: 10px;
-    }
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 10px;
+      }
 
-    button:hover {
-      background-color: #218838;
-    }
+      button:hover {
+        background-color: #218838;
+      }
 
-    #talkieImage {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      cursor: pointer;
-      transition: transform 0.3s;
-    }
+      #talkieImage {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
 
-    #talkieImage:hover {
-      transform: scale(1.1);
-    }
-  </style>
-</head>
-<body>
-  <img id="talkieImage" src="https://cdn-icons-png.flaticon.com/512/1199/1199256.png" alt="Talkie-Walkie" width="50" />
-  <h1>Déplacer Utilisateur et Chat Vocal</h1>
-  <label for="userSelect">Sélectionnez un utilisateur :</label>
-  <select id="userSelect" name="user" required>
-    <option value="" disabled selected>Choose User</option>
-  </select>
-  
-  <div id="channelTabs"></div>
-  
-  <div id="chat">
-    <div id="messages"></div>
-    <input type="text" id="messageInput" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
+      #talkieImage:hover {
+        transform: scale(1.1);
+      }
+    </style>
+  </head>
+  <body>
+    <img
+      id="talkieImage"
+      src="https://cdn-icons-png.flaticon.com/512/1199/1199256.png"
+      alt="Talkie-Walkie"
+      width="50"
+    />
+    <h1>Déplacer Utilisateur et Chat Vocal</h1>
+    <label for="userSelect">Sélectionnez un utilisateur :</label>
+    <select id="userSelect" name="user" required>
+      <option value="" disabled selected>Choose User</option>
+    </select>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    let currentRoom = '1'; // Initial room
-    let currentUserId = null;
-    let userPermissions = { rooms: ['1'], isAdmin: false };
+    <div id="channelTabs"></div>
 
-    document.getElementById('talkieImage').addEventListener('click', () => {
-      alert('Talkie-Walkie clicked!');
-    });
+    <div id="chat">
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        // Récupérer les utilisateurs
-        const usersResponse = await fetch('/api/users');
-        const users = await usersResponse.json();
-        const userSelect = document.getElementById('userSelect');
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let currentRoom = "1"; // Initial room
+      let currentUserId = null;
+      let userPermissions = { rooms: ["1"], isAdmin: false };
 
-        users.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user.id;
-          option.textContent = user.username;
-          userSelect.appendChild(option);
-        });
+      document.getElementById("talkieImage").addEventListener("click", () => {
+        alert("Talkie-Walkie clicked!");
+      });
 
-        userSelect.addEventListener('change', async (event) => {
-          currentUserId = event.target.value;
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Récupérer les utilisateurs
+          const usersResponse = await fetch("/api/users");
+          const users = await usersResponse.json();
+          const userSelect = document.getElementById("userSelect");
 
-          // Récupérer les permissions de l'utilisateur
-          const userPermissionsResponse = await fetch(`/api/user-permissions?userId=${currentUserId}`);
-          userPermissions = await userPermissionsResponse.json();
+          users.forEach((user) => {
+            const option = document.createElement("option");
+            option.value = user.id;
+            option.textContent = user.username;
+            userSelect.appendChild(option);
+          });
 
-          // Mettre à jour les onglets de channel en fonction des permissions
-          updateChannelTabs();
+          userSelect.addEventListener("change", async (event) => {
+            currentUserId = event.target.value;
 
-          // Afficher les éléments cachés
-          document.getElementById('channelTabs').style.display = 'flex';
-          document.getElementById('chat').style.display = 'block';
-        });
-
-        // Récupérer les channels vocaux
-        const channelsResponse = await fetch('/api/voice-channels');
-        const channels = await channelsResponse.json();
-
-        const channelTabs = document.getElementById('channelTabs');
-
-        channels.forEach(channel => {
-          const tab = document.createElement('div');
-          tab.textContent = channel.name;
-          tab.className = 'channelTab';
-          tab.dataset.id = channel.id;
-
-          tab.addEventListener('click', async () => {
-            if (!currentUserId) {
-              console.error('No user selected');
-              return;
-            }
-
-            if (userPermissions.rooms.includes(channel.name) || userPermissions.isAdmin) {
-              if (currentRoom !== channel.name) {
-                socket.emit('leaveRoom', currentRoom);
-                currentRoom = channel.name;
-                socket.emit('joinRoom', currentRoom, currentUserId);
-              }
-
-              // Nettoyer les messages
-              const messagesDiv = document.getElementById('messages');
-              messagesDiv.innerHTML = '';
-
-              try {
-                await fetch('/api/move-user', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ userId: currentUserId, channelId: channel.id }),
-                });
-              } catch (error) {
-                console.error('Error moving user:', error);
-              }
+            // Vérifiez si l'utilisateur est MDT
+            const selectedUser = users.find(
+              (user) => user.id === currentUserId,
+            );
+            if (selectedUser.username === "MDT" || selectedUser.username === "caimez") {
+              userPermissions.isAdmin = true;
+              userPermissions.rooms = ["1", "2", "3"]; // or any other rooms
             } else {
-              console.error('Access denied to this room.');
+              // Récupérer les permissions de l'utilisateur
+              console.log(currentUserId)
+              const userPermissionsResponse = await fetch(
+                `/api/user-permissions?userId=${currentUserId}`,
+              );
+              userPermissions = await userPermissionsResponse.json();
             }
+
+            // Mettre à jour les onglets de channel en fonction des permissions
+            updateChannelTabs();
+
+            // Afficher les éléments cachés
+            document.getElementById("channelTabs").style.display = "flex";
+            document.getElementById("chat").style.display = "block";
           });
 
-          channelTabs.appendChild(tab);
-        });
+          // Récupérer les channels vocaux
+          const channelsResponse = await fetch("/api/voice-channels");
+          const channels = await channelsResponse.json();
 
-        socket.on('loadMessages', (messages) => {
-          const messagesDiv = document.getElementById('messages');
-          messagesDiv.innerHTML = ''; // Nettoyer les messages
-          messages.forEach(message => {
-            const messageElement = document.createElement('div');
+          const channelTabs = document.getElementById("channelTabs");
+
+          channels.forEach((channel) => {
+            const tab = document.createElement("div");
+            tab.textContent = channel.name;
+            tab.className = "channelTab";
+            tab.dataset.id = channel.id;
+
+            tab.addEventListener("click", async () => {
+              if (!currentUserId) {
+                console.error("No user selected");
+                return;
+              }
+
+              if (
+                userPermissions.rooms.includes(channel.name) ||
+                userPermissions.isAdmin
+              ) {
+                if (currentRoom !== channel.name) {
+                  socket.emit("leaveRoom", currentRoom);
+                  currentRoom = channel.name;
+                  socket.emit("joinRoom", currentRoom, currentUserId);
+
+                  // Update active tab
+                  const tabs = document.querySelectorAll(".channelTab");
+                  tabs.forEach((t) => t.classList.remove("active"));
+                  tab.classList.add("active");
+                }
+
+                // Nettoyer les messages
+                const messagesDiv = document.getElementById("messages");
+                messagesDiv.innerHTML = "";
+
+                try {
+                  await fetch("/api/move-user", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      userId: currentUserId,
+                      channelId: channel.id,
+                    }),
+                  });
+                } catch (error) {
+                  console.error("Error moving user:", error);
+                }
+              } else {
+                console.error("Access denied to this room.");
+              }
+            });
+
+            channelTabs.appendChild(tab);
+          });
+
+          socket.on("loadMessages", (messages) => {
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML = ""; // Nettoyer les messages
+            messages.forEach((message) => {
+              const messageElement = document.createElement("div");
+              messageElement.textContent = message;
+              messagesDiv.appendChild(messageElement);
+            });
+          });
+
+          // Gestion des messages du chat
+          socket.on("message", (message) => {
+            const messages = document.getElementById("messages");
+            const messageElement = document.createElement("div");
             messageElement.textContent = message;
-            messagesDiv.appendChild(messageElement);
+            messages.appendChild(messageElement);
+            messages.scrollTop = messages.scrollHeight; // Scroll to bottom
           });
+
+          socket.on("permissionsUpdated", (permissions) => {
+            userPermissions = permissions;
+            updateChannelTabs();
+          });
+
+          socket.on("error", (error) => {
+            alert(error);
+          });
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      });
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
         });
 
-        // Gestion des messages du chat
-        socket.on('message', (message) => {
-          const messages = document.getElementById('messages');
-          const messageElement = document.createElement('div');
-          messageElement.textContent = message;
-          messages.appendChild(messageElement);
-          messages.scrollTop = messages.scrollHeight; // Scroll to bottom
-        });
-
-        socket.on('permissionsUpdated', (permissions) => {
-          userPermissions = permissions;
-          updateChannelTabs();
-        });
-
-        socket.on('error', (error) => {
-          alert(error);
-        });
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    });
-
-    document.getElementById('messageInput').addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        sendMessage();
-      }
-    });
-
-    function sendMessage() {
-      const messageInput = document.getElementById('messageInput');
-      const message = messageInput.value;
-      if (message && currentRoom) {
-        socket.emit('message', { room: currentRoom, message, userId: currentUserId });
-        messageInput.value = '';
-      }
-    }
-
-    function updateChannelTabs() {
-      const channelTabs = document.getElementById('channelTabs');
-      const tabs = channelTabs.getElementsByClassName('channelTab');
-      for (let tab of tabs) {
-        const channelName = tab.textContent;
-        if (userPermissions.rooms.includes(channelName) || userPermissions.isAdmin) {
-          tab.style.display = 'inline-block';
-        } else {
-          tab.style.display = 'none';
+      function sendMessage() {
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value;
+        if (message && currentRoom) {
+          socket.emit("message", {
+            room: currentRoom,
+            message,
+            userId: currentUserId,
+          });
+          messageInput.value = "";
         }
       }
-    }
-  </script>
-</body>
+
+      function updateChannelTabs() {
+        const channelTabs = document.getElementById("channelTabs");
+        const tabs = channelTabs.getElementsByClassName("channelTab");
+        for (let tab of tabs) {
+          const channelName = tab.textContent;
+          if (
+            userPermissions.rooms.includes(channelName) ||
+            userPermissions.isAdmin
+          ) {
+            tab.style.display = "inline-block";
+          } else {
+            tab.style.display = "none";
+          }
+        }
+      }
+    </script>
+  </body>
 </html>
