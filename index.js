@@ -14,7 +14,8 @@ require("dotenv").config();
 app.use(express.json());
 //app.use(express.static(path.join(__dirname, 'public')));
 
-const messageHistory = {};
+let messagesByRoom = {};
+let userPermissions = {};
 
 const client = new Client({
   intents: [
@@ -50,15 +51,15 @@ io.on("connection", (socket) => {
     // On catch le socket emit dans le debug
     const channel = client.channels.cache.get("1245008440145739880");
     if (channel) {
-      // Sur le papier, les messages sont envoyés dans les salons vocaux 
+      // Sur le papier, les messages sont envoyés dans les salons vocaux
       // Les canaux sont nommés d'après les cannals vocaux
       // Ensuite les messages sont stockés sur le serveur socket js et la copie également
-      // En revanche, la copie des message qui est envoyé en texte va venir chercher un salon textuel correspondant, 
+      // En revanche, la copie des message qui est envoyé en texte va venir chercher un salon textuel correspondant,
       channel.send(`Message in ${msg.room} : ${msg.message}`);
     }
 
     // Réponse au client Socket.IO
-    //socket.emit("message");
+    // socket.emit("message");
   });
 
   socket.on("disconnect", () => {
@@ -75,59 +76,54 @@ app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
-app.get("/api/serverDatas", async (req, res) => {
-  res.json(process.env.SERVER_ID);
-});
-
-app.get("/api/userTrack", async (req, res) => {
-  const userTrackDict = {
-    1: "a",
-    2: "b",
-    3: "c",
-    4: "d",
-  };
-  res.json(userTrackDict);
-});
-
 app.get("/api/userRight", async (req, res) => {
   const guildId = process.env.SERVER_ID;
   const guild = await client.guilds.fetch(guildId);
   const members = await guild.members.fetch();
 
-  const users = members.map(member => ({
+  const users = members.map((member) => ({
     id: member.user.id,
     username: member.user.username,
   }));
-  
+
   let rights = {};
   for (const [_, value] of Object.entries(users)) {
-    console.log(value)
+    console.log(value);
     rights[value.id] = ["lobby"];
   }
-  
-  console.log(rights)
+
+  console.log(rights);
   res.json(rights);
 });
 
+app.get("/api/user-permissions", (req, res) => {
+  const { userId } = req.query;
+  const permissions = userPermissions[userId] || {
+    rooms: ["1"],
+    isAdmin: false,
+  };
+  res.json(permissions);
+});
+
 // Route pour fournir les données des canaux vocaux
-app.get('/api/voice-channels', async (req, res) => {
+app.get("/api/voice-channels", async (req, res) => {
   try {
-    const guildId = process.env.SERVER_ID; 
+    const guildId = process.env.SERVER_ID;
     const guild = await client.guilds.fetch(guildId);
-    await guild.channels.fetch(); 
+    await guild.channels.fetch();
 
     const voiceChannels = guild.channels.cache
-      .filter(channel => channel.type === 2)
-      .map(channel => ({
+      .filter((channel) => channel.type === 2)
+      .map((channel) => ({
         id: channel.id,
         name: channel.name,
-        memberCount: channel.members.size 
+        memberCount: channel.members.size,
       }));
 
     res.json(voiceChannels);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send("Internal Server Error");
   }
 });
 
@@ -136,40 +132,38 @@ app.get("/data", (req, res) => {
   res.sendFile(path.join(__dirname, "data.html"));
 });
 
-app.get('/api/users', async (req, res) => {
+app.get("/api/users", async (req, res) => {
   try {
     const guildId = process.env.SERVER_ID;
     const guild = await client.guilds.fetch(guildId);
     const members = await guild.members.fetch();
 
-    const users = members.map(member => ({
+    const users = members.map((member) => ({
       id: member.user.id,
       username: member.user.username,
     }));
-    
+
     res.json(users);
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send("Internal Server Error");
   }
 });
 
-
 app.post("/api/move-user", async (req, res) => {
   const { userId, channelId } = req.body;
-
-  try {
-    const guildId = process.env.SERVER_ID;
-    const guild = await client.guilds.fetch(guildId);
-
-    const member = await guild.members.fetch(userId);
-    console.log(userId)
-    await member.voice.setChannel(channelId);
-
-    res.send("Utilisateur déplacé avec succès");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Erreur lors du déplacement de l'utilisateur");
+  const guild = client.guilds.cache.first();
+  const member = guild.members.cache.get(userId);
+  if (member) {
+    try {
+      await member.voice.setChannel(channelId);
+      res.status(200).send("User moved");
+    } catch (error) {
+      console.error("Error moving user:", error);
+      res.status(500).send("Error moving user");
+    }
+  } else {
+    res.status(404).send("User not found");
   }
 });
 
@@ -183,42 +177,52 @@ server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+io.on("connection", (socket) => {
+  console.log("a user connected");
 
-io.on('connection', (socket) => {
-  console.log('a user connected');
-
-  socket.on('joinRoom', (room) => {
-    socket.join(room);
-    console.log(`User joined room: ${room}`);
-    if (messageHistory[room]) {
-      socket.emit('loadMessages', messageHistory[room]);
+  socket.on("joinRoom", (room, userId) => {
+    const user = userPermissions[userId] || { rooms: ["1"], isAdmin: false };
+    if (user.rooms.includes(room) || user.isAdmin) {
+      socket.join(room);
+      socket.emit("loadMessages", messagesByRoom[room] || []);
+    } else {
+      socket.emit("error", "You do not have access to this room.");
     }
   });
 
-  socket.on('message', async (data) => {
-    const { room, message } = data;
-    if (!messageHistory[room]) {
-      messageHistory[room] = [];
+  socket.on("message", async ({ room, message, userId }) => {
+    if (!messagesByRoom[room]) {
+      messagesByRoom[room] = [];
     }
-    messageHistory[room].push(message);
+    messagesByRoom[room].push(message);
+    io.to(room).emit("message", message);
 
-    io.to(room).emit('message', message);
-
-    // Envoyer une copie du message dans le canal textuel Discord correspondant
-    const guildId = process.env.SERVER_ID; // Remplacez par votre ID de serveur
+    // Send a copy of the message to the corresponding Discord text channel
+    const guildId = process.env.SERVER_ID;
     const guild = await client.guilds.fetch(guildId);
-    const textChannel = guild.channels.cache.find(c => c.name === room && c.type === 0); // 0 pour les canaux textuels
+    const textChannel = guild.channels.cache.find(
+      (ch) => ch.name === room && ch.type === 0,
+    );
     if (textChannel) {
       textChannel.send(message);
     }
+
+    // Unlock rooms if the message contains the keyword "Pizza"
+    if (room === "1" && message.toLowerCase() === "pizza") {
+      userPermissions[userId] = {
+        ...userPermissions[userId],
+        rooms: ["1", "2", "3"],
+      };
+      socket.emit("permissionsUpdated", userPermissions[userId]);
+    }
   });
 
-  socket.on('leaveRoom', (room) => {
+  socket.on("leaveRoom", (room) => {
     socket.leave(room);
     console.log(`User left room: ${room}`);
   });
 
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
   });
 });
