@@ -36,6 +36,7 @@
       gap: 10px;
       justify-content: center;
       margin-top: 20px;
+      display: none; /* Hidden initially */
     }
 
     .channelTab {
@@ -51,11 +52,6 @@
       background-color: #ddd;
     }
 
-    .inactive {
-      background-color: #eee;
-      cursor: not-allowed;
-    }
-
     .active {
       background-color: #bbb;
     }
@@ -64,6 +60,7 @@
       margin-top: 20px;
       width: 80%;
       max-width: 800px;
+      display: none; /* Hidden initially */
     }
 
     #messages {
@@ -161,6 +158,10 @@
 
           // Mettre à jour les onglets de channel en fonction des permissions
           updateChannelTabs();
+
+          // Afficher les éléments cachés
+          document.getElementById('channelTabs').style.display = 'flex';
+          document.getElementById('chat').style.display = 'block';
         });
 
         // Récupérer les channels vocaux
@@ -264,9 +265,9 @@
       for (let tab of tabs) {
         const channelName = tab.textContent;
         if (userPermissions.rooms.includes(channelName) || userPermissions.isAdmin) {
-          tab.classList.remove('inactive');
+          tab.style.display = 'inline-block';
         } else {
-          tab.classList.add('inactive');
+          tab.style.display = 'none';
         }
       }
     }
