@@ -181,11 +181,9 @@
                   });
 
                   if (response.ok) {
-                    alert("Utilisateur déplacé avec succès");
+                    console.log("Utilisateur déplacé avec succès");
                   } else {
-                    console.error(
-                      "Erreur lors du déplacement de l'utilisateur",
-                    );
+                    console.log("Erreur lors du déplacement de l'utilisateur");
                   }
                 } catch (error) {
                   console.error("Erreur:", error);

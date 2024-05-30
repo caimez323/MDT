@@ -89,14 +89,24 @@ app.get("/api/userTrack", async (req, res) => {
   res.json(userTrackDict);
 });
 
-app.get("/api/discoTab", async (req, res) => {
-  const tabDisco = {
-    1: "a",
-    2: "b",
-    3: "c",
-    4: "d",
-  };
-  res.json(tabDisco);
+app.get("/api/userRight", async (req, res) => {
+  const guildId = process.env.SERVER_ID;
+  const guild = await client.guilds.fetch(guildId);
+  const members = await guild.members.fetch();
+
+  const users = members.map(member => ({
+    id: member.user.id,
+    username: member.user.username,
+  }));
+  
+  let rights = {};
+  for (const [_, value] of Object.entries(users)) {
+    console.log(value)
+    rights[value.id] = ["lobby"];
+  }
+  
+  console.log(rights)
+  res.json(rights);
 });
 
 // Route pour fournir les données des canaux vocaux
@@ -153,6 +163,7 @@ app.post("/api/move-user", async (req, res) => {
     const guild = await client.guilds.fetch(guildId);
 
     const member = await guild.members.fetch(userId);
+    console.log(userId)
     await member.voice.setChannel(channelId);
 
     res.send("Utilisateur déplacé avec succès");
