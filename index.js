@@ -77,7 +77,7 @@ app.get("/form", (req, res) => {
 });
 
 app.get("/1", (req, res) => {
-  res.sendFile(path.join(__dirname, "1.html"));
+  res.sendFile(path.join(__dirname, "src/1.html"));
 });
 
 app.get("/api/userRight", async (req, res) => {
