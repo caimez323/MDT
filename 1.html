@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page 1</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #image-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      #mapImage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .clickable-area {
+        position: absolute;
+        border: 0px solid red; /* Bordure visible pour tester */
+        cursor: help;
+      }
+
+      .clickable-area:hover {
+        border: 2px dotted rgb(255, 255, 255); /* Bordure visible pour tester */
+      }
+
+      /* Styles pour la fenêtre de zoom */
+      #zoomBubble {
+        position: absolute;
+        border: 2px solid #333;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: none;
+        padding: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+      }
+
+      #zoomImage {
+        max-width: 300px;
+        max-height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="image-container">
+      <img
+        id="mapImage"
+        src="https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg"
+        alt="Map"
+      />
+      <!-- Zone cliquable qui redirige -->
+      <div class="clickable-area" 
+           style="top: 10%; left: 20%; width: 15%; height: 10%;" 
+           data-action="redirect"
+           data-url="page2.html">
+      </div>
+      <!-- Zone cliquable qui fait un zoom -->
+      <div class="clickable-area" 
+           style="top: 40%; left: 40%; width: 15%; height: 10%;" 
+           data-action="zoom"
+           data-zoom-image="https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg">
+      </div>
+      <div id="zoomBubble">
+        <img id="zoomImage" src="" alt="Zoomed Area" />
+      </div>
+    </div>
+    <script>
+      function navigateTo(url) {
+        window.location.href = url;
+      }
+
+      function openZoom(event) {
+        const target = event.currentTarget;
+        const action = target.getAttribute("data-action");
+        const zoomBubble = document.getElementById("zoomBubble");
+        const zoomImage = document.getElementById("zoomImage");
+
+        const x = event.clientX;
+        const y = event.clientY;
+
+        // Ajuster la position du zoomBubble
+        zoomBubble.style.left = `${x - 150}px`; // Ajustez en fonction de la taille du zoomBubble
+        zoomBubble.style.top = `${y - 150}px`;  // Ajustez en fonction de la taille du zoomBubble
+
+        if (action === "redirect") {
+          // Redirection avec un léger délai pour afficher la bulle
+          setTimeout(() => {
+            const url = target.getAttribute("data-url");
+            navigateTo(url);
+          }, 300);
+        } else if (action === "zoom") {
+          // Afficher la bulle de zoom
+          const zoomImageUrl = target.getAttribute("data-zoom-image");
+          zoomImage.src = zoomImageUrl;
+          zoomBubble.style.display = "block";
+        }
+      }
+
+      document.addEventListener("click", (event) => {
+        if (!event.target.classList.contains("clickable-area")) {
+          document.getElementById("zoomBubble").style.display = "none";
+        }
+      });
+
+      document.querySelectorAll(".clickable-area").forEach(area => {
+        area.addEventListener("click", openZoom);
+      });
+    </script>
+  </body>
+</html>
