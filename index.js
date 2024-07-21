@@ -76,6 +76,10 @@ app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
+app.get("/1", (req, res) => {
+  res.sendFile(path.join(__dirname, "1.html"));
+});
+
 app.get("/api/userRight", async (req, res) => {
   const guildId = process.env.SERVER_ID;
   const guild = await client.guilds.fetch(guildId);
