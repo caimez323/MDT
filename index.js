@@ -1,8 +1,10 @@
 console.log("loading bot");
 
+
+const fs = require("fs")
 const { Client, GatewayIntentBits } = require("discord.js");
-//require('dotenv').config();
 const express = require("express");
+//require('dotenv').config();
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
@@ -12,7 +14,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 require("dotenv").config();
 app.use(express.json());
-//app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 let messagesByRoom = {};
 let userPermissions = {};
@@ -72,12 +74,45 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// ça marche donc on touche pas, je sais que ça vient d'un problème de chemin le fait de ne pas pouvoir faire une une ligne comme prévu mais
+// C'est moi qui décide et pour l'instant ça marche donc
+const resourcesPath = path.join(__dirname, 'resources');
+
+// Fonction pour parcourir les fichiers et dossiers récursivement
+function registerRoutes(directory, baseRoute = '/resources') {
+  fs.readdir(directory, { withFileTypes: true }, (err, files) => {
+    if (err) {
+      console.error('Erreur lors de la lecture du répertoire', err);
+      return;
+    }
+
+    files.forEach(file => {
+      const fullPath = path.join(directory, file.name);
+      const routePath = path.join(baseRoute, file.name).replace(/\\/g, '/');
+
+      if (file.isDirectory()) {
+        // Appel récursif pour les sous-dossiers
+        registerRoutes(fullPath, routePath);
+      } else {
+        // Création de la route pour le fichier
+        app.get(routePath, (req, res) => {
+          res.sendFile(fullPath);
+        });
+        console.log(`Route créée: ${routePath} -> ${fullPath}`);
+      }
+    });
+  });
+}
+
+// Appel de la fonction pour le répertoire de ressources
+registerRoutes(resourcesPath);
+
 app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
 app.get("/1", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/1.html"));
+  res.sendFile(path.join(__dirname, "/src/1.html"));
 });
 
 app.get("/api/userRight", async (req, res) => {
