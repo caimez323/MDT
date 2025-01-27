@@ -74,9 +74,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// =======================================================================
+//    Zone lien des salles
+// =======================================================================
 // ça marche donc on touche pas, je sais que ça vient d'un problème de chemin le fait de ne pas pouvoir faire une une ligne comme prévu mais
 // C'est moi qui décide et pour l'instant ça marche donc
 const resourcesPath = path.join(__dirname, 'resources');
+const htmlPath = path.join(__dirname, 'src');
 
 // Fonction pour parcourir les fichiers et dossiers récursivement
 function registerRoutes(directory, baseRoute = '/resources') {
@@ -106,14 +110,21 @@ function registerRoutes(directory, baseRoute = '/resources') {
 
 // Appel de la fonction pour le répertoire de ressources
 registerRoutes(resourcesPath);
+registerRoutes(htmlPath);
+
+app.get("/1", (req, res) => {
+  res.sendFile(path.join(__dirname, "src/1.html"));
+});
+
+app.get("/codelockA1", (req, res) => {
+  res.sendFile(path.join(__dirname, "src/codelockA1.html"));
+});
 
 app.get("/form", (req, res) => {
   res.sendFile(path.join(__dirname, "form.html"));
 });
 
-app.get("/1", (req, res) => {
-  res.sendFile(path.join(__dirname, "/src/1.html"));
-});
+
 
 app.get("/api/userRight", async (req, res) => {
   const guildId = process.env.SERVER_ID;
@@ -215,6 +226,7 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
 
 io.on("connection", (socket) => {
   console.log("a user connected");

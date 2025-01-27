@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Input</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #image-container {
+            position: relative;
+            width: 80%;
+            max-width: 800px;
+        }
+        #mapImage {
+            width: 100%;
+            display: block;
+        }
+        #codeInput {
+            position: absolute;
+            top: 15%; /* vertical pos */
+            left: 48%;
+            transform: translate(-50%, -50%);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 50%; /* W*/
+        }
+    </style>
+</head>
+<body>
+    <div id="image-container">
+        <img
+            id="mapImage"
+            src="./resources/room1A/keycode.png"
+            alt="Map"
+        />
+        <input type="text" id="codeInput" placeholder="Entrez le code">
+    </div>
+
+    <script>
+        document.getElementById('codeInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const code = e.target.value;
+                if (code === '0000') {
+                    window.location.href = 'page2.html';
+                } else {
+                    alert('Code incorrect. Veuillez réessayer.');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
